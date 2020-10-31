@@ -6,24 +6,19 @@ from ConvertToGrayscale import convertToGrayscale
 from DisplayFrames import displayFrames
 from threading import Thread, Lock, enumerate, Condition
 
+#Locks that will be used by each thread to safely access hte produce/consumer queues
 colorQueueLock = Lock()
 grayscaleQueueLock = Lock()
 
-endOfVideo = False
+#The producer/consumer queues that each thread will use to pass data with.
+colorQueue = FrameQueue(colorQueueLock, ('Extracting','Converting'), max = 10)
+grayscaleQueue = FrameQueue(grayscaleQueueLock, ('Converting', 'Displaying'), max = 10)
 
-colorQueue = FrameQueue(colorQueueLock, ('Extracting','Converting'), endOfVideo)
-grayscaleQueue = FrameQueue(grayscaleQueueLock, ('Converting', 'Displaying'), endOfVideo)
-
+#All three threads are defined and given the approprite function and queues
 threads = [Thread(target = extractFrames, args = (colorQueue,)),
            Thread(target = convertToGrayscale, args = (colorQueue, grayscaleQueue)),
            Thread(target = displayFrames, args = (grayscaleQueue,))]
 
+#All threads started.
 for i in range(len(threads)):
     threads[i].start()
-
-'''
-while enumerate() == 0:
-    sys.sleep(250)
-
-print('Video complete')
-'''

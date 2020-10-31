@@ -4,13 +4,11 @@ import cv2
 import os
 import sys
 
-def extractFrames(outQueue = None, endOfVideo):
+def extractFrames(outQueue = None):
     print('Extract Frames starting.')
-
-    # globals
     outputDir    = 'frames'
     clipFileName = 'clip.mp4'
-    # initialize frame count
+
     count = 0
 
     # open the video clip
@@ -26,24 +24,13 @@ def extractFrames(outQueue = None, endOfVideo):
 
     print(f'Reading frame {count} {success}')
 
-    if not outQueue:
-        while success and count < 72:
+    while success and count < 72:
+      outQueue.enqueue(image)
+      success,image = vidcap.read()
+      count += 1
+      #print('Success:', success, '| frame:', count)
 
-          # write the current frame out as a jpeg image
-          cv2.imwrite(f"{outputDir}/frame_{count:04d}.bmp", image)
-
-          success,image = vidcap.read()
-          #print(f'Reading frame {count}')
-          print('Success:', success, type(success), '| frame:', count)
-          count += 1
-    else:
-        while success and count < 72:
-          outQueue.enqueue(image)
-          success,image = vidcap.read()
-          count += 1
-          #print('Success:', success, '| frame:', count)
-
-        #End of stream signal for all 3 threads
-        outQueue.enqueue(None)
+    #End of stream signal for all 3 threads
+    outQueue.enqueue(None)
     print('Extractor EXITING')
     sys.exit()

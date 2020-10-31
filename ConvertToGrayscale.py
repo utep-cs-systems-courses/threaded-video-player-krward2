@@ -3,47 +3,19 @@
 import cv2
 import sys
 
-def convertToGrayscale(inQueue = None, outQueue = None, endOfVideo):
-    # globals
-    outputDir    = 'frames'
+def convertToGrayscale(inQueue, outQueue):
 
     # initialize frame count
     count = 0
     print('ConvertToGrayscale starting')
-    if not (inQueue and outQueue):
-        # get the next frame file name
-        inFileName = f'{outputDir}/frame_{count:04d}.bmp'
-        print('ConvertToGrayscale without queue starting')
 
-        # load the next file
-        inputFrame = cv2.imread(inFileName, cv2.IMREAD_COLOR)
-
-        while inputFrame is not None and count < 72:
-            print(f'Converting frame {count}')
-
-            # convert the image to grayscale
-            grayscaleFrame = cv2.cvtColor(inputFrame, cv2.COLOR_BGR2GRAY)
-
-            # generate output file name
-            outFileName = f'{outputDir}/grayscale_{count:04d}.bmp'
-
-            # write output file
-            cv2.imwrite(outFileName, grayscaleFrame)
-
-            count += 1
-
-            # generate input file name for the next frame
-            inFileName = f'{outputDir}/frame_{count:04d}.bmp'
-
-            # load the next frame
-            inputFrame = cv2.imread(inFileName, cv2.IMREAD_COLOR)
-    else:
+    inputFrame = inQueue.dequeue()
+    while inputFrame is not None and count < 72:
+        grayscaleFrame = cv2.cvtColor(inputFrame, cv2.COLOR_BGR2GRAY)
+        outQueue.enqueue(grayscaleFrame)
+        count += 1
         inputFrame = inQueue.dequeue()
-        while inputFrame is not None and count < 72:
-            grayscaleFrame = cv2.cvtColor(inputFrame, cv2.COLOR_BGR2GRAY)
-            outQueue.enqueue(grayscaleFrame)
-            count += 1
-            inputFrame = inQueue.dequeue()
 
-    print(' Converter Exiting')
+    outQueue.enqueue(None)
+    print(' Converter EXITING')
     sys.exit()
