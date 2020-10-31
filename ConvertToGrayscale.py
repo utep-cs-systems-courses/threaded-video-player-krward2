@@ -3,17 +3,17 @@
 import cv2
 import sys
 
-def convertToGrayscale(frameQueue = None, grayscaleQueue = None):
+def convertToGrayscale(inQueue = None, outQueue = None, endOfVideo):
     # globals
     outputDir    = 'frames'
 
     # initialize frame count
     count = 0
-
-    if not (frameQueue and grayscaleQueue):
+    print('ConvertToGrayscale starting')
+    if not (inQueue and outQueue):
         # get the next frame file name
         inFileName = f'{outputDir}/frame_{count:04d}.bmp'
-
+        print('ConvertToGrayscale without queue starting')
 
         # load the next file
         inputFrame = cv2.imread(inFileName, cv2.IMREAD_COLOR)
@@ -38,5 +38,12 @@ def convertToGrayscale(frameQueue = None, grayscaleQueue = None):
             # load the next frame
             inputFrame = cv2.imread(inFileName, cv2.IMREAD_COLOR)
     else:
-        sys.exit()
+        inputFrame = inQueue.dequeue()
+        while inputFrame is not None and count < 72:
+            grayscaleFrame = cv2.cvtColor(inputFrame, cv2.COLOR_BGR2GRAY)
+            outQueue.enqueue(grayscaleFrame)
+            count += 1
+            inputFrame = inQueue.dequeue()
+
+    print(' Converter Exiting')
     sys.exit()
