@@ -2,35 +2,29 @@
 
 import cv2
 import os
-import sys
+# globals
+outputDir    = 'frames'
+clipFileName = 'clip.mp4'
+# initialize frame count
+count = 0
 
-def extractFrames(outQueue = None):
-    print('Extract Frames starting.')
-    outputDir    = 'frames'
-    clipFileName = 'clip.mp4'
+# open the video clip
+vidcap = cv2.VideoCapture(clipFileName)
 
-    count = 0
+# create the output directory if it doesn't exist
+if not os.path.exists(outputDir):
+  print(f"Output directory {outputDir} didn't exist, creating")
+  os.makedirs(outputDir)
 
-    # open the video clip
-    vidcap = cv2.VideoCapture(clipFileName)
+# read one frame
+success,image = vidcap.read()
 
-    # create the output directory if it doesn't exist
-    if not os.path.exists(outputDir):
-      print(f"Output directory {outputDir} didn't exist, creating")
-      os.makedirs(outputDir)
+print(f'Reading frame {count} {success}')
+while success and count < 72:
 
-    # read one frame
-    success,image = vidcap.read()
+  # write the current frame out as a jpeg image
+  cv2.imwrite(f"{outputDir}/frame_{count:04d}.bmp", image)   
 
-    print(f'Reading frame {count} {success}')
-
-    while success and count < 72:
-      outQueue.enqueue(image)
-      success,image = vidcap.read()
-      count += 1
-      #print('Success:', success, '| frame:', count)
-
-    #End of stream signal for all 3 threads
-    outQueue.enqueue(None)
-    print('Extractor EXITING')
-    sys.exit()
+  success,image = vidcap.read()
+  print(f'Reading frame {count}')
+  count += 1
