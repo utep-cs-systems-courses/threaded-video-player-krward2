@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
 from FrameQueue import FrameQueue
-from ExtractFrames import extractFrames
-from ConvertToGrayscale import convertToGrayscale
-from DisplayFrames import displayFrames
+from functions import extractFrames, convertToGrayscale, displayFrames
 from threading import Thread, Lock, enumerate, Condition
 
 #Locks that will be used by each thread to safely access hte produce/consumer queues
@@ -15,9 +13,9 @@ colorQueue = FrameQueue(colorQueueLock, ('Extracting','Converting'), max = 10)
 grayscaleQueue = FrameQueue(grayscaleQueueLock, ('Converting', 'Displaying'), max = 10)
 
 #All three threads are defined and given the approprite function and queues
-threads = [Thread(target = extractFrames, args = (colorQueue,)),
+threads = [Thread(target = extractFrames, args = ('clip.mp4',colorQueue)),
            Thread(target = convertToGrayscale, args = (colorQueue, grayscaleQueue)),
-           Thread(target = displayFrames, args = (grayscaleQueue,))]
+           Thread(target = displayFrames, args = (grayscaleQueue, 42))]
 
 #All threads started.
 for i in range(len(threads)):
