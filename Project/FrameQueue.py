@@ -1,36 +1,40 @@
 from threading import Condition
+from threading import Semaphore
 import sys, time
 
+
 class FrameQueue:
-    def __init__(self, lock, actions = ('enqueue', 'dequeue'), max = 5):
+    def __init__(self, lock, name, max = 5):
         self.list = []
         self.queueLock = lock
-        self.emptyCondition = Condition(lock)
-        self.fullCondition = Condition(lock)
-        self.actions = actions
+        self.emptyCheck = Semaphore(max)
+        self.fullCheck = Semaphore(max)
+        self.name = name
         self.maxQueueSize = max
-        self.counter = 0
+        self.inCounter = 0
+        self.outCounter = 0
 
     def enqueue(self, frame):
-        self.fullCondition.acquire()
-        while self.isFull():
-            print(self.actions[0], 'waiting for queue to empty.')
-            self.fullCondition.wait()
+        self.fullCheck.acquire() #Blocks the producer thread if the queue is full
+        self.inCounter += 1
+        print(self.name, 'enqueuing frame', self.inCounter, '| Queue length:', len(self.list))
+
+        queueLock.acquire() #Ensures only one thread has access to the queue.
         self.list.append(frame)
-        self.counter += 1
-        print(self.actions[0], 'frame', self.counter, '| Queue length:', len(self.list))
-        self.emptyCondition.notify()
-        self.fullCondition.release()
+        queueLock.release()
+
+        self.emptyCheck.release() #Will un-block the consumer thread if waiting on queue to fill
 
     def dequeue(self):
-        self.emptyCondition.acquire()
-        while self.isEmpty():
-            print(self.actions[1], 'waiting for queue to populate')
-            self.emptyCondition.wait()
-        print(self.actions[1], 'frame', self.counter, '| Queue length:', len(self.list))
+        emptyCheck.acquire() # Blocks the consumer thread if queue is empty
+        self.outCounter += 1
+        print(self.name, 'dequeuing frame', self.outCounter, '| Queue length:', len(self.list))
+
+        queueLock.acquire() #Ensures only one thread has access to the queue.
         frame = self.list.pop(0)
-        self.fullCondition.notify()
-        self.emptyCondition.release()
+        queueLock.release()
+
+        fullCheck.release() #Will un-block the producer thread if waiting for space in the queue
         return frame
 
     def isEmpty(self):
