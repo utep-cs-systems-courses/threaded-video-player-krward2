@@ -7,7 +7,7 @@ class FrameQueue:
     def __init__(self, lock, name, max = 5):
         self.list = []
         self.queueLock = lock
-        self.emptyCheck = Semaphore(max)
+        self.emptyCheck = Semaphore(0)
         self.fullCheck = Semaphore(max)
         self.name = name
         self.maxQueueSize = max
@@ -19,22 +19,22 @@ class FrameQueue:
         self.inCounter += 1
         print(self.name, 'enqueuing frame', self.inCounter, '| Queue length:', len(self.list))
 
-        queueLock.acquire() #Ensures only one thread has access to the queue.
+        self.queueLock.acquire() #Ensures only one thread has access to the queue.
         self.list.append(frame)
-        queueLock.release()
+        self.queueLock.release()
 
         self.emptyCheck.release() #Will un-block the consumer thread if waiting on queue to fill
 
     def dequeue(self):
-        emptyCheck.acquire() # Blocks the consumer thread if queue is empty
+        self.emptyCheck.acquire() # Blocks the consumer thread if queue is empty
         self.outCounter += 1
         print(self.name, 'dequeuing frame', self.outCounter, '| Queue length:', len(self.list))
 
-        queueLock.acquire() #Ensures only one thread has access to the queue.
+        self.queueLock.acquire() #Ensures only one thread has access to the queue.
         frame = self.list.pop(0)
-        queueLock.release()
+        self.queueLock.release()
 
-        fullCheck.release() #Will un-block the producer thread if waiting for space in the queue
+        self.fullCheck.release() #Will un-block the producer thread if waiting for space in the queue
         return frame
 
     def isEmpty(self):
